@@ -1,10 +1,11 @@
 import classNames from 'classnames/bind';
 import { useContext } from 'react';
 
-import Header from '../Header';
-import Footer from '../Footer';
+import Header from '../components/Header';
+import Footer from '../components/Footer';
 import Login from '~/components/Login';
 import { ModalContext } from '~/components/ModalProvider';
+import { ScrollToTop } from '~/components/ScrollToTop';
 
 import styles from './DefaultLayout.module.scss';
 
@@ -17,6 +18,7 @@ function DefaultLayout({ children }) {
             <div className={cx('container')}>
                 <Header />
                 {children}
+                <ScrollToTop />
                 <Footer />
             </div>
             {Login_Signup.active && <Login onHide={Login_Signup.handleHiddenActive} state={'Log In'}></Login>}

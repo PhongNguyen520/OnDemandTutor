@@ -9,7 +9,7 @@ import Popper from '../Popper';
 import styles from './Search.module.scss';
 
 const cx = classNames.bind(styles);
-function Search() {
+function Search({ width, className, onChangeResult, ...passProps }) {
     const [searchValue, setSearchResult] = useState('');
     const [loading, setLoading] = useState(false);
     const [showResult, setShowResult] = useState(false);
@@ -24,6 +24,7 @@ function Search() {
         }
 
         setSearchResult(searchValue);
+        onChangeResult(searchValue);
     };
 
     const handleClear = () => {
@@ -42,12 +43,13 @@ function Search() {
     return (
         <HeadlessTippy
             interactive
+            appendTo={() => document.body}
             visible={showResult}
             offset={[-35, 1]}
             placement="bottom"
             onClickOutside={handleHiddenResult}
             render={(attrs) => (
-                <div className={cx('search_results')} tabIndex="-1" {...attrs}>
+                <div className={cx('search_results')} style={{ width: width }} tabIndex="-1" {...attrs}>
                     <Popper>
                         <ul className={cx('search_list')}>
                             <li>Math</li>
@@ -62,12 +64,12 @@ function Search() {
                 </div>
             )}
         >
-            <div className={cx('SearchPanel_left-search')}>
+            <div className={cx('SearchPanel_left-search', { className })}>
                 <input
                     ref={inputRef}
                     value={searchValue}
                     type="text"
-                    className={cx('SearchPanel_left-search-ip')}
+                    className={cx('SearchPanel_left-search-ip', { className })}
                     placeholder="What would you like to learn?"
                     onChange={handleSearch}
                     onFocus={handleShowResult}

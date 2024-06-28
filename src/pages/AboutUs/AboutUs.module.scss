@@ -1,0 +1,187 @@
+.wrapper {
+    margin-top: var(--default-layout-height-header);
+    min-height: 1000px;
+}
+
+.container__header {
+    margin-top: 50px;
+    text-align: center;
+    p {
+        font-size: 4rem;
+        font-weight: 700;
+        margin: 30px;
+        color: #ed6d20;
+    }
+    span {
+        font-size: 2rem;
+        padding: 20px;
+    }
+}
+
+.image_header{
+    background-image: url('../../assets/images/image.png');
+    height: 500px;
+        text-align: center;
+        background-size: cover;
+        background-position: center;
+        img{
+            height: 100%;
+            width:  100%;
+        }
+
+        h1{
+            padding-top: 200px;
+            text-shadow: 2px 2px 5px rgba(0, 0, 0, 0.5);
+            // color: rgb(3, 68, 68);
+            color: rgb(237, 241, 241);
+            text-transform: uppercase;
+            font-weight: 400;
+            line-height: 1.2;
+            font-size: 48px;
+            font-family: "Ubuntu", sans-serif;
+        }
+}
+
+.container__button{
+    display: flex; 
+    align-items: center;
+    justify-content: center;
+    margin-top: 20px;
+    button{
+        padding: 13px 20px;
+        line-height: 1.3em;
+        font-size: 14px;
+        color: #fff;
+        background: #ed6d20;
+        border-radius: 5px;
+    }
+}
+
+
+
+.container__different {
+    margin: 40px 0;
+    display: flex;
+    justify-content: center;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    img {
+        width: 100px;
+        height: 100px;
+        margin-bottom: 20px;
+        // border-radius: 50%;
+    }
+
+    p {
+        font-weight: 500;
+        font-size: 1.6rem;
+        max-width: 300px;
+    }
+}
+
+.container__booking {
+    padding: 40px 80px;
+    margin: 40px 0;
+    border: 2px solid #16c2dc;
+    border-radius: 8px;
+    text-align: center;
+    background-color: var(--black);
+    color: var(--white);
+
+    p {
+        font-weight: 700;
+        font-size: 3rem;
+        margin-bottom: 20px;
+    }
+
+    span {
+        font-weight: 500;
+        font-size: 1.6rem;
+    }
+}
+
+.container__information1{
+    background-image: url('../../assets/images/aboutUs1.png');
+    background-repeat: no-repeat;
+    text-align: center;
+    background-position: center;
+    margin-top: 30px;
+    height: 400px;
+    h1{
+        padding-top: 170px;
+        color: #fff;
+        font-family: "Ubuntu", sans-serif;
+        font-size: 42px;
+        font-weight: 400;
+    line-height: 1.2;
+    }
+    h3{
+        color: #fff;
+        font-size: 22px;
+        line-height: 1.25;
+        font-family: "Ubuntu", sans-serif;
+    }
+}
+
+.container__information{
+    
+}
+
+.container__information2{
+    background-image: url('../../assets/images/aboutUs2.png');
+    background-repeat: no-repeat;
+    background-position: center;
+    margin-top: 30px;
+
+    h1{
+        padding-top: 170px;
+        color: #fff;
+        font-family: "Ubuntu", sans-serif;
+        font-size: 42px;
+        font-weight: 400;
+    line-height: 1.2;
+    }
+
+    h3{
+        color: #fff;
+        font-size: 22px;
+        line-height: 1.25;
+        font-family: "Ubuntu", sans-serif;
+    }
+}
+
+.container__information3{
+    background-image: url('../../assets/images/aboutUs3.png');
+    background-repeat: no-repeat;
+    background-position: center;
+    margin-top: 30px;
+
+    h1{
+        padding-top: 170px;
+        color: #fff;
+        font-family: "Ubuntu", sans-serif;
+        font-size: 42px;
+        font-weight: 400;
+    line-height: 1.2;
+    }
+
+    h3{
+        color: #fff;
+        font-size: 22px;
+        line-height: 1.25;
+        font-family: "Ubuntu", sans-serif;
+    }
+}
+
+
+.container__difference{
+    text-align: center;
+    h1 {
+        font-size: 4rem;
+        font-weight: 700;
+        margin-top: 40px;
+        color: #ed6d20;
+    }
+
+}
