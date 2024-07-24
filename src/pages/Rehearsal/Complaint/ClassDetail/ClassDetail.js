@@ -25,6 +25,8 @@ function ClassDetail({ classID, handleHiddenShowDetails, setStatus }) {
     const [showNotification, setShowNotification] = useState('');
     const [typeOfNoti, setTypeOfNoti] = useState('');
 
+    console.log(classes);
+
     //get class detail
     useEffect(() => {
         let isMounted = true;
@@ -49,12 +51,12 @@ function ClassDetail({ classID, handleHiddenShowDetails, setStatus }) {
     //handle end class
     const handleEndClass = async () => {
         const response = await requestPrivate.put(`${END_CLASS_URL}/${classID}`);
+        console.log(response.status);
         if (response.status === 200) {
             setShowNotification('Class has been close. Thank for support this class!');
             setTypeOfNoti('Success');
             setShowModal(true);
             handleRefund();
-            handleHiddenShowDetails();
             setStatus(true);
         }
     };
@@ -66,9 +68,8 @@ function ClassDetail({ classID, handleHiddenShowDetails, setStatus }) {
             JSON.stringify({ studentId: classes.studentId, amount: classes.price }),
         );
 
-        console.log(response.status);
+
         if (response.status === 200) {
-            createNotification();
         }
     };
 
@@ -81,7 +82,7 @@ function ClassDetail({ classID, handleHiddenShowDetails, setStatus }) {
                     title: `The class been ended and return the money to your wallet`,
                     description: `check your balance`,
                     url: `/wallet`,
-                    accountId: `${classes.studentId}`,
+                    accountId: `${classes.accountId}`,
                 }),
             );
             if (response.status === 200) {
@@ -94,6 +95,7 @@ function ClassDetail({ classID, handleHiddenShowDetails, setStatus }) {
     //handle close modal
     const handleCloseModal = () => {
         setShowModal(false);
+        handleHiddenShowDetails();
     };
 
     return (
