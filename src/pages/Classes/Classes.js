@@ -118,19 +118,19 @@ const Classes = () => {
         [price, message, classID, vnpayId, momoId]
     );
 
-    const handleCancle = useCallback(async () => {
-        try {
-            const selectedClassId = localStorage.getItem('selectedClassId');
-            const response = await requests.post(`${STUDENT_BROWSERCLASS_URL}/cancel_class`, { classid: selectedClassId });
-            if (response.data === true) {
-                const newClasses = classes.filter((item) => item.classid !== selectedClassId);
-                setClasses(newClasses);
-                localStorage.removeItem('selectedClassId');
-            }
-        } catch (error) {
-            console.error('Error cancelling class:', error);
-        }
-    });
+    // const handleCancle = useCallback(async () => {
+    //     try {
+    //         const selectedClassId = localStorage.getItem('selectedClassId');
+    //         const response = await requestPrivate.post(`${STUDENT_BROWSERCLASS_URL}?classId=${selectedClassId}&action=false`);
+    //         if (response.data === true) {
+    //             const newClasses = classes.filter((item) => item.classid !== selectedClassId);
+    //             setClasses(newClasses);
+    //             localStorage.removeItem('selectedClassId');
+    //         }
+    //     } catch (error) {
+    //         console.error('Error cancelling class:', error);
+    //     }
+    // });
 
     const fetchClasses = useCallback(async () => {
         try {
@@ -159,7 +159,6 @@ const Classes = () => {
             console.error('Error fetching classes:', error);
         }
     }, [filterParams, requestPrivate]);
-    console.log(transactionId, selectedClassId, userId);
 
     const handlePaymentResponse = useCallback(
         async (paramsObject) => {
@@ -319,7 +318,7 @@ const Classes = () => {
                                         {filterParams.status === null && filterParams.isApprove === null ? (
                                             <div className={cx('container_avatar-buttons')}>
                                                 <button className={cx('container_avatar-button', 'reject')}
-                                                    onClick={handleCancle}>
+                                                >
                                                     Reject
                                                 </button>
                                                 <button
