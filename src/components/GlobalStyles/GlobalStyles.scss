@@ -12,17 +12,16 @@
     --orange: #ed6d20;
     --green: #60ad56;
     --hover: rgba(247, 128, 69, 0.929);
-
-    --yellow: linear-gradient(180deg, #F8D49A -146.42%, #FAD79D -46.42%);
-//   --orange: #fca61f;
-  --black: #242d49;
-  --gray: #788097;
-  --purple: linear-gradient(180deg, #BB67FF 0%, #C484F3 100%);
-  --pink: #FF919D;
-  --glass: rgba(255, 255, 255, 0.54);
-  --boxShadow: 0px 19px 60px rgb(0 0 0 / 8%);
-  --smboxShadow: -79px 51px 60px rgba(0, 0, 0, 0.08);
-  --activeItem: #f799a354;
+    --yellow: linear-gradient(180deg, #f8d49a -146.42%, #fad79d -46.42%);
+    //   --orange: #fca61f;
+    --black: #242d49;
+    --gray: #788097;
+    --purple: linear-gradient(180deg, #bb67ff 0%, #c484f3 100%);
+    --pink: #ff919d;
+    --glass: rgba(255, 255, 255, 0.54);
+    --boxShadow: 0px 19px 60px rgb(0 0 0 / 8%);
+    --smboxShadow: -79px 51px 60px rgba(0, 0, 0, 0.08);
+    --activeItem: #f799a354;
 
     //Default layout
     --font-family: TikTokFont;
@@ -104,14 +103,18 @@ a {
     background-color: transparent;
     max-width: 382px;
     color: red;
+    margin-top: 10px;
+    font-size: 1.2rem;
 
     p {
         margin-bottom: 0px;
     }
 }
 
-.valid {
+.valid,
+.invalid {
     display: inline-block;
+    margin-left: 10px;
 }
 
 .hide {
@@ -156,4 +159,62 @@ a {
     font-family: TikTokFont;
     src: url('/assets/fonts/TikTokFont-Semibold.woff2');
     font-weight: 600;
+}
+
+.spinner {
+    width: 300px;
+    height: 300px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    background-color: transparent;
+}
+
+.spinner span {
+    font-size: 2rem;
+    animation: fade 1s linear 0s infinite;
+    padding-right: 1rem;
+}
+
+.half-spinner {
+    width: 50px;
+    height: 50px;
+    border: 3px solid #03fc4e;
+    border-top: 3px solid transparent;
+    border-radius: 50%;
+    animation: spin 0.5s linear 0s infinite;
+}
+
+.completed {
+    font-size: 2rem;
+    color: #03fc4e;
+
+    animation: bigger 1s linear;
+}
+
+@keyframes bigger {
+    from {
+        transform: scale(0);
+    }
+    to {
+        transform: scale(2);
+    }
+}
+
+@keyframes spin {
+    from {
+        transform: rotate(0);
+    }
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+@keyframes fade {
+    from {
+        opacity: 0;
+    }
+    to {
+        opacity: 1;
+    }
 }

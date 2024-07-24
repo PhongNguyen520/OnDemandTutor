@@ -1,137 +1,240 @@
 import classNames from 'classnames/bind';
-import { useMemo } from 'react';
+import { useEffect, useState } from 'react';
+import { Container, Row, Col } from 'react-bootstrap';
 
-import Container from 'react-bootstrap/Container';
-import Row from 'react-bootstrap/Row';
-import Col from 'react-bootstrap/Col';
-
-import images from '~/assets/images';
-import Image from '~/components/Image';
-import Button from '~/components/Button';
+import useDebounce from '~/hooks/useDebounce';
+import Paging from '~/components/Paging';
+import useRequestsPrivate from '~/hooks/useRequestPrivate';
 
 import styles from './Blog.module.scss';
+import Post from '~/components/Post';
+import ModalNotification from '~/components/ModalNotification';
 
 const cx = classNames.bind(styles);
 
+const FORM_FIND_TUTOR_URL = 'formfindtutor/search_post';
+const VIEW_APPLY_FORM_URL = 'formfindtutor/tutor_getforms';
+const APPLY_POST_URL = 'formfindtutor/tutor_applypost';
+
 function Blog() {
-    const videos = useMemo(
-        () => [
-            {
-                subject: 'Math',
-                gender: 'male',
-                typeOfDegree: 'Master',
-                description:
-                    'Experience teaching and tutoring middle school students, especially 9th grade. Effective teaching methods to help my child master the material and improve academic performance. Friendly, enthusiastic, and able to motivate my child to engage with the learning process. Availability to provide lessons at our home during afternoons/evenings on weekdays. Reasonable tutoring rates.',
-            },
-            {
-                subject: 'Math',
-                gender: 'male',
-                typeOfDegree: 'Master',
-                description:
-                    'Experience teaching and tutoring middle school students, especially 9th grade. Effective teaching methods to help my child master the material and improve academic performance. Friendly, enthusiastic, and able to motivate my child to engage with the learning process. Availability to provide lessons at our home during afternoons/evenings on weekdays. Reasonable tutoring rates.',
-            },
-            {
-                subject: 'Math',
-                gender: 'male',
-                typeOfDegree: 'Master',
-                description:
-                    'Experience teaching and tutoring middle school students, especially 9th grade. Effective teaching methods to help my child master the material and improve academic performance. Friendly, enthusiastic, and able to motivate my child to engage with the learning process. Availability to provide lessons at our home during afternoons/evenings on weekdays. Reasonable tutoring rates.',
-            },
-            {
-                subject: 'Math',
-                gender: 'male',
-                typeOfDegree: 'Master',
-                description:
-                    'Experience teaching and tutoring middle school students, especially 9th grade. Effective teaching methods to help my child master the material and improve academic performance. Friendly, enthusiastic, and able to motivate my child to engage with the learning process. Availability to provide lessons at our home during afternoons/evenings on weekdays. Reasonable tutoring rates.',
-            },
-            {
-                subject: 'Math',
-                gender: 'male',
-                typeOfDegree: 'Master',
-                description:
-                    'Experience teaching and tutoring middle school students, especially 9th grade. Effective teaching methods to help my child master the material and improve academic performance. Friendly, enthusiastic, and able to motivate my child to engage with the learning process. Availability to provide lessons at our home during afternoons/evenings on weekdays. Reasonable tutoring rates.',
-            },
-            {
-                subject: 'Math',
-                gender: 'male',
-                typeOfDegree: 'Master',
-                description:
-                    'Experience teaching and tutoring middle school students, especially 9th grade. Effective teaching methods to help my child master the material and improve academic performance. Friendly, enthusiastic, and able to motivate my child to engage with the learning process. Availability to provide lessons at our home during afternoons/evenings on weekdays. Reasonable tutoring rates.',
-            },
-            {
-                subject: 'Math',
-                gender: 'male',
-                typeOfDegree: 'Master',
-                description:
-                    'Experience teaching and tutoring middle school students, especially 9th grade. Effective teaching methods to help my child master the material and improve academic performance. Friendly, enthusiastic, and able to motivate my child to engage with the learning process. Availability to provide lessons at our home during afternoons/evenings on weekdays. Reasonable tutoring rates.',
-            },
-            {
-                subject: 'Math',
-                gender: 'male',
-                typeOfDegree: 'Master',
-                description:
-                    'Experience teaching and tutoring middle school students, especially 9th grade. Effective teaching methods to help my child master the material and improve academic performance. Friendly, enthusiastic, and able to motivate my child to engage with the learning process. Availability to provide lessons at our home during afternoons/evenings on weekdays. Reasonable tutoring rates.',
-            },
-            {
-                subject: 'Math',
-                gender: 'male',
-                typeOfDegree: 'Master',
-                description:
-                    'Experience teaching and tutoring middle school students, especially 9th grade. Effective teaching methods to help my child master the material and improve academic performance. Friendly, enthusiastic, and able to motivate my child to engage with the learning process. Availability to provide lessons at our home during afternoons/evenings on weekdays. Reasonable tutoring rates.',
-            },
-            {
-                subject: 'Math',
-                gender: 'male',
-                typeOfDegree: 'Master',
-                description:
-                    'Experience teaching and tutoring middle school students, especially 9th grade. Effective teaching methods to help my child master the material and improve academic performance. Friendly, enthusiastic, and able to motivate my child to engage with the learning process. Availability to provide lessons at our home during afternoons/evenings on weekdays. Reasonable tutoring rates.',
-            },
-        ],
-        [],
-    );
+    const requestPrivate = useRequestsPrivate();
+    const [listClasses, setListClasses] = useState([]);
+    const [disable, setDisable] = useState([]);
+    const [pagination, setPagination] = useState({
+        page: 1,
+        limit: 0,
+        total: 1,
+    });
+    const [gender, setGender] = useState();
+    const [subject, setSubject] = useState('');
+    const [hourlyRate, setHourlyRate] = useState();
+    const [gradeId, setGradeId] = useState('');
+    const [typeOfDegree, setTypeOfDegree] = useState('');
+    const [sortPostBy, setSortPostBy] = useState(0);
+    const [sortPostType, setSortPostType] = useState(1);
+    const [apply, setApply] = useState(false);
+    const [listResult, setListResult] = useState([]);
+    const [curPage, setcurPage] = useState(1);
+    const [error, setError] = useState('');
+    const [showModal, setShowModal] = useState(false);
+    const debouncedValueSubject = useDebounce(subject, 500);
+    const debouncedValueHourlyRate = useDebounce(hourlyRate, 500);
+    const debouncedGradeId = useDebounce(gradeId, 500);
+    const debouncedTypeOfDegree = useDebounce(typeOfDegree, 500);
+
+    useEffect(() => {
+        let isMounted = true;
+        const controller = new AbortController();
+        let url = FORM_FIND_TUTOR_URL;
+        if (
+            debouncedValueSubject ||
+            debouncedValueHourlyRate ||
+            debouncedGradeId ||
+            debouncedTypeOfDegree ||
+            curPage ||
+            sortPostBy
+        ) {
+            const params = new URLSearchParams();
+            if (debouncedValueSubject) {
+                params.append('Search', debouncedValueSubject);
+            }
+            if (debouncedValueHourlyRate) {
+                params.append('HourlyRate', debouncedValueHourlyRate);
+            }
+            if (debouncedGradeId) {
+                params.append('GradeId', debouncedGradeId);
+            }
+            if (gender) {
+                params.append('Gender', gender);
+            }
+            if (debouncedTypeOfDegree) {
+                params.append('TypeOfDegree', debouncedTypeOfDegree);
+            }
+            if (sortPostBy) {
+                params.append('SortContent.sortPostBy', sortPostBy);
+            }
+            if (sortPostType) {
+                params.append('SortContent.sortPostType', sortPostType);
+            }
+            if (curPage) {
+                params.append('pageIndex', curPage);
+            }
+            url += `?${params.toString()}`;
+        }
+        const getFormClass = async () => {
+            const response = await requestPrivate.get(url, {
+                signal: controller.signal,
+            });
+            isMounted && setListClasses(response.data.listResult);
+            setPagination((prev) => ({ ...prev, limit: response.data.limitPage }));
+            return () => {
+                isMounted = false;
+                controller.abort();
+            };
+        };
+
+        getFormClass();
+    }, [
+        debouncedValueSubject,
+        debouncedValueHourlyRate,
+        debouncedGradeId,
+        gender,
+        debouncedTypeOfDegree,
+        sortPostType,
+        curPage,
+        sortPostBy,
+        requestPrivate,
+    ]);
+
+    useEffect(() => {
+        let isMounted = true;
+        const controller = new AbortController();
+        const viewApplyForm = async () => {
+            try {
+                const response = await requestPrivate.get(
+                    VIEW_APPLY_FORM_URL,
+                    { params: { isApprove: null } },
+                    { signal: controller.signal },
+                );
+                isMounted && setListResult(response.data.listResult);
+                setApply(false);
+            } catch (error) {}
+        };
+
+        viewApplyForm();
+
+        return () => {
+            isMounted = false;
+            controller.abort();
+        };
+    }, [apply]);
+
+    const handleApply = async (id) => {
+        try {
+            const response = await requestPrivate.post(APPLY_POST_URL, id);
+            console.log(response.data);
+            console.log(typeof response.data);
+            if (typeof response.data === 'string') {
+                setError(response.data);
+            } else {
+                setError('You are applied successfully');
+                setApply(true);
+            }
+
+            setShowModal(true);
+        } catch (error) {
+            console.log(error);
+            console.log(error.response);
+            if (error?.response?.status === 400) {
+                setError(error);
+            }
+        }
+    };
+
+    const handleSelectSort = (e) => {
+        switch (e.target.value) {
+            case 'Soonest':
+                setSortPostType(1);
+                break;
+            case 'Latest':
+                setSortPostType(2);
+                break;
+            default:
+                break;
+        }
+    };
+
+    const commonItems = listClasses.filter(({ formId }) => !listResult.some((x) => x.formId === formId));
+
+    const handleCloseModal = () => setShowModal(false);
 
     return (
         <div className={cx('wrapper')}>
             <Container className={cx('container')}>
-                {videos.map((video, index) => {
-                    return (
-                        <Row key={index} className={cx('container__hero')}>
-                            <Col lg="8" className={cx('container__card')} key={index}>
-                                <form className={cx('container__form-control')} action="Get">
-                                    <div className={cx('container__form-control-portfolio')}>
-                                        <strong>Subject: </strong>
-                                        <span> {video.subject}</span>
-                                    </div>
-                                    <div className={cx('container__form-control-portfolio')}>
-                                        <strong>Desired tutor gender: </strong>
-                                        <span> {video.gender}</span>
-                                    </div>
-                                    <div className={cx('container__form-control-portfolio')}>
-                                        <strong>Type of degree: </strong>
-                                        <span> {video.typeOfDegree}</span>
-                                    </div>
-                                    <div className={cx('container__form-control-portfolio')}>
-                                        <strong>Description: </strong>
-                                        <span> {video.description}</span>
-                                    </div>
-                                    <input
-                                        type="submit"
-                                        value="Apply"
-                                        className={cx('container__form-control-submit')}
-                                    ></input>
-                                </form>
-                            </Col>
-
-                            <Col lg="4" className={cx('container_avatar')}>
-                                <Image src={images.avatar} alt="NTP"></Image>
-                                <p>Nguyen Thanh Phong</p>
-                                <Button orange medium className={cx('container_avatar-chat')}>
-                                    Chat with Phong
-                                </Button>
-                            </Col>
-                        </Row>
-                    );
-                })}
+                <Row>
+                    <Col lg="3" className={cx('search')}>
+                        <div className={cx('slip')}>
+                            <h3>Search</h3>
+                            <div className={cx('search__items')}>
+                                <label htmlFor="textSubject">Subject</label>
+                                <input
+                                    type="text"
+                                    id="textSubject"
+                                    onChange={(e) => {
+                                        setSubject(e.target.value);
+                                    }}
+                                ></input>
+                            </div>
+                            <div className={cx('search__items')}>
+                                <label htmlFor="hourlyRate">Hourly Rate</label>
+                                <input
+                                    type="number"
+                                    id="HourlyRate"
+                                    onChange={(e) => {
+                                        setHourlyRate(e.target.value);
+                                    }}
+                                ></input>
+                            </div>
+                            <div className={cx('search__items')}>
+                                <label htmlFor="gradeId">Grade Id</label>
+                                <input
+                                    type="text"
+                                    id="GradeId"
+                                    onChange={(e) => {
+                                        setGradeId(e.target.value);
+                                    }}
+                                ></input>
+                            </div>
+                            <div className={cx('search__items')}>
+                                <label htmlFor="gender">
+                                    <strong>Gender:</strong>
+                                </label>
+                                <select id="gender" onChange={(e) => setGender(e.target.value)}>
+                                    <option value={''}>--</option>
+                                    <option value={true}>Male</option>
+                                    <option value={false}>Female</option>
+                                </select>
+                            </div>
+                            <div className={cx('search__items')} onChange={(e) => setTypeOfDegree(e.target.value)}>
+                                <label htmlFor="typeOfDegree">Type Of Degree</label>
+                                <input type="text" id="typeOfDegree"></input>
+                            </div>
+                        </div>
+                    </Col>
+                    <Col lg="9">
+                        <Post
+                            handleApply={handleApply}
+                            listClasses={commonItems}
+                            handleSelectSort={handleSelectSort}
+                            disable={disable}
+                            syntax={'applyPost'}
+                        ></Post>
+                        {pagination.limit > 1 && (
+                            <Paging pagination={pagination} curPage={curPage} setcurPage={setcurPage} />
+                        )}
+                    </Col>
+                </Row>
+                <ModalNotification showModal={showModal} handleCloseModal={handleCloseModal} error={error} />
             </Container>
         </div>
     );

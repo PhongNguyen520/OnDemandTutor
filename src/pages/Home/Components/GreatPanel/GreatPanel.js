@@ -1,20 +1,43 @@
 import classNames from 'classnames/bind';
-import { useEffect, useRef } from 'react';
+import { Link } from 'react-router-dom';
+import { useContext, useEffect, useRef, useState } from 'react';
 
 import 'bootstrap/dist/css/bootstrap.min.css';
-import Row from 'react-bootstrap/Row';
-import Col from 'react-bootstrap/Col';
+import { Container, Row, Col } from 'react-bootstrap';
 
 import Image from '~/components/Image';
+import requests from '~/utils/request';
+import images from '~/assets/images';
+import { ModalContext } from '~/components/ModalProvider';
 
 import styles from './GreatPanel.module.scss';
 
 const cx = classNames.bind(styles);
 
+const TOP10_URL = 'system-handler/get_top-10-tutor';
+
 function GreatPanel({ greatTutors }) {
     const nodeRef = useRef();
     const nodeRef2 = useRef();
+    const { setTutorId } = useContext(ModalContext);
+    const [top10, setTop10] = useState([]);
 
+    //get top 10 tutor
+    useEffect(() => {
+        let isMount = true;
+        const getTop10 = async () => {
+            const response = await requests.get(TOP10_URL);
+            isMount && setTop10(response.data);
+        };
+
+        getTop10();
+
+        return () => {
+            isMount = false;
+        };
+    }, []);
+
+    //scroll
     useEffect(() => {
         const currentScroll = '.' + nodeRef.current.className;
         const greatTutorPanel_animation = '.' + nodeRef2.current.className;
@@ -42,21 +65,30 @@ function GreatPanel({ greatTutors }) {
     }, []);
 
     return (
-        <Row className={cx('wrapper')}>
-            <Col>
-                {greatTutors.map((greatTutorChildren, index) => {
-                    return (
-                        <div key={index} className={cx('greatTutorPanel__container')}>
-                            <div className={cx('greatTutorPanel__container-title')}>{greatTutorChildren.title}</div>
-                            <div className={cx('greatTutorPanel__container-summary')}>{greatTutorChildren.summary}</div>
+        <Container className={cx('wrapper')}>
+            <Row>
+                <Col>
+                    <Row className={cx('greatTutorPanel__container')}>
+                        <Col className={cx('greatTutorPanel__container-title')}>Your next great tutor</Col>
+                        <Col className={cx('greatTutorPanel__container-summary')}>
+                            Enjoy one-on-one instruction from the nation of biggest network of independent experts.
+                        </Col>
 
-                            <div className={cx('scroller')} ref={nodeRef} data-direction={'left'}>
-                                <div className={cx('greatTutorPanel__container-animation')} ref={nodeRef2}>
-                                    {greatTutorChildren.subjects.map((subject, index) => {
+                        <div className={cx('scroller')} ref={nodeRef} data-direction={'left'}>
+                            <div className={cx('greatTutorPanel__container-animation')} ref={nodeRef2}>
+                                {top10.length > 0 &&
+                                    top10.map((subject, index) => {
                                         return (
-                                            <div key={index} className={cx('greatTutorPanel__container-subjects')}>
+                                            <Link
+                                                to={`/account/tutor/${subject.fullName}`}
+                                                onClick={() => {
+                                                    setTutorId(subject.tutorId)
+                                                }}
+                                                key={index}
+                                                className={cx('greatTutorPanel__container-subjects')}
+                                            >
                                                 <div className={cx('greatTutorPanel__container-subjects-left')}>
-                                                    <Image src={subject.avatar} alt={'#'}></Image>
+                                                    <Image src={subject.avatar} alt={subject.fullName}></Image>
                                                 </div>
                                                 <div className={cx('greatTutorPanel__container-subjects-right')}>
                                                     <p
@@ -64,69 +96,74 @@ function GreatPanel({ greatTutors }) {
                                                             'greatTutorPanel__container-subjects-right-label',
                                                         )}
                                                     >
-                                                        {subject.label}
+                                                        {subject.fullName}
                                                     </p>
                                                     <p
                                                         className={cx(
                                                             'greatTutorPanel__container-subjects-right-content',
                                                         )}
                                                     >
-                                                        {subject.content}
+                                                        {subject.description}
                                                     </p>
                                                     <p
                                                         className={cx(
                                                             'greatTutorPanel__container-subjects-right-level',
                                                         )}
                                                     >
-                                                        {subject.level}
+                                                        {subject.headline}
                                                     </p>
                                                 </div>
-                                            </div>
+                                            </Link>
                                         );
                                     })}
-                                </div>
-                            </div>
-                            <div className={cx('scroller')} ref={nodeRef} data-direction={'right'}>
-                                <div className={cx('greatTutorPanel__container-animation')} ref={nodeRef2}>
-                                    {greatTutorChildren.subjects.map((subject, index) => {
-                                        return (
-                                            <div key={index} className={cx('greatTutorPanel__container-subjects')}>
-                                                <div className={cx('greatTutorPanel__container-subjects-left')}>
-                                                    <Image src={subject.avatar} alt={'#'}></Image>
-                                                </div>
-                                                <div className={cx('greatTutorPanel__container-subjects-right')}>
-                                                    <p
-                                                        className={cx(
-                                                            'greatTutorPanel__container-subjects-right-label',
-                                                        )}
-                                                    >
-                                                        {subject.label}
-                                                    </p>
-                                                    <p
-                                                        className={cx(
-                                                            'greatTutorPanel__container-subjects-right-content',
-                                                        )}
-                                                    >
-                                                        {subject.content}
-                                                    </p>
-                                                    <p
-                                                        className={cx(
-                                                            'greatTutorPanel__container-subjects-right-level',
-                                                        )}
-                                                    >
-                                                        {subject.level}
-                                                    </p>
-                                                </div>
-                                            </div>
-                                        );
-                                    })}
-                                </div>
                             </div>
                         </div>
-                    );
-                })}
-            </Col>
-        </Row>
+                        <div className={cx('scroller')} ref={nodeRef} data-direction={'right'}>
+                            <div className={cx('greatTutorPanel__container-animation')} ref={nodeRef2}>
+                                {top10.length > 0 &&
+                                    top10.map((subject, index) => {
+                                        return (
+                                            <Link
+                                                to={`/account/tutor/${subject.fullName}`}
+
+                                                key={index}
+                                                className={cx('greatTutorPanel__container-subjects')}
+                                            >
+                                                <div className={cx('greatTutorPanel__container-subjects-left')}>
+                                                    <Image src={subject.avatar} alt={subject.fullName}></Image>
+                                                </div>
+                                                <div className={cx('greatTutorPanel__container-subjects-right')}>
+                                                    <p
+                                                        className={cx(
+                                                            'greatTutorPanel__container-subjects-right-label',
+                                                        )}
+                                                    >
+                                                        {subject.fullName}
+                                                    </p>
+                                                    <p
+                                                        className={cx(
+                                                            'greatTutorPanel__container-subjects-right-content',
+                                                        )}
+                                                    >
+                                                        {subject.description}
+                                                    </p>
+                                                    <p
+                                                        className={cx(
+                                                            'greatTutorPanel__container-subjects-right-level',
+                                                        )}
+                                                    >
+                                                        {subject.headline}
+                                                    </p>
+                                                </div>
+                                            </Link>
+                                        );
+                                    })}
+                            </div>
+                        </div>
+                    </Row>
+                </Col>
+            </Row>
+        </Container>
     );
 }
 

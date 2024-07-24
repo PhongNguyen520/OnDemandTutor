@@ -1,34 +1,45 @@
 import classNames from 'classnames/bind';
-import { useEffect, useRef, useState, useContext } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faCheck, faTimes } from '@fortawesome/free-solid-svg-icons';
+import { useEffect, useRef, useState, useContext, useMemo } from 'react';
+import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
+import { storage } from '~/firebase/firebase';
+import { v4 } from 'uuid';
 
 import requests from '~/utils/request';
+import Subject from '~/pages/BecomeTutor2/Subject';
 import { ModalContext } from '~/components/ModalProvider';
 import Button from '~/components/Button';
+import { InvalidIcon, ValidIcon } from '~/components/Icons';
 
 import styles from './BecomeTutor2.module.scss';
-
-const IMGBB = 'https://api.imgbb.com/1/upload?key=9c7d176f8c72a29fa6384fbb49cff7bc';
+import useDebounce from '~/hooks/useDebounce';
+import Image from '~/components/Image';
 
 const cx = classNames.bind(styles);
-
 const CARD_REGEX = /^[0-9]{10}$/;
-const REGISTER_URL = '/auth/tutor-signUp';
+const HOURLYRATE_REGEX = /^[1-9][0-9]*$/;
+const REGISTER_URL = 'auth/tutor_signup';
 
 function BecomeTutor2() {
-    const context = useContext(ModalContext);
-    const navigate = useNavigate();
+
+    const { chooseSubject, setChooseSubject, userId, setTutorId, setUserId } = useContext(ModalContext);
+    const degrees = useMemo(
+        () => ['College', 'Associate Degree', 'Bachelors Degree', 'Masters Degree', 'Doctoral Degree'],
+        [],
+    );
     const errRef = useRef();
 
-    const [image, setImage] = useState(null);
-    const [file, setFile] = useState('');
+    const [errMsg, setErrMsg] = useState();
     const [date, setDate] = useState('');
 
     const [cardId, setCardId] = useState('');
     const [validCardID, setValidCardId] = useState(false);
     const [cardFocus, setCardFocus] = useState(false);
+
+    const [hourlyRate, setHourlyRate] = useState(1);
+    const [validHourlyRate, setValidHourly] = useState(false);
+    const [hourlyRateFocus, setHourlyRateFocus] = useState(false);
+
+    const deboundedHourlyRate = useDebounce(hourlyRate, 500);
 
     const [typeOfDegree, setTypeOfDegree] = useState('');
     const [typeOfDegreeFocus, setTypeOfDegreeFocus] = useState(false);
@@ -45,9 +56,9 @@ function BecomeTutor2() {
     const [address, setAddress] = useState('');
     const [addressFocus, setAddressFocus] = useState(false);
 
-    const [selectedFile, setSelectedFile] = useState(null);
-
-    const [errMsg, setErrMsg] = useState();
+    const [nameImage, setNameImage] = useState('');
+    const [loadingImage, setLoadingImage] = useState(false);
+    const [image, setImage] = useState('');
 
     useEffect(() => {
         const result = CARD_REGEX.test(cardId);
@@ -55,58 +66,61 @@ function BecomeTutor2() {
     }, [cardId]);
 
     useEffect(() => {
+        const result = HOURLYRATE_REGEX.test(deboundedHourlyRate);
+        setValidHourly(result);
+    }, [deboundedHourlyRate]);
+
+    useEffect(() => {
         setErrMsg('');
-    }, [cardId]);
+    }, [cardId, deboundedHourlyRate]);
+
+    //handle image to firebase
+    const handleChangeImage = async () => {
+        if (image == null) return;
+        const imageRef = ref(storage, `images/${image.name + v4()}`);
+        setLoadingImage(true);
+        uploadBytes(imageRef, image).then((snapshot) => {
+            getDownloadURL(snapshot.ref).then((snapshot) => {
+                setNameImage(snapshot);
+                setLoadingImage(false);
+            });
+        });
+    };
 
     const handleSubmit = async (e) => {
         e.preventDefault();
-
         const v = CARD_REGEX.test(cardId);
-        const form = new FormData();
-
-        if (!v) {
+        const v1 = HOURLYRATE_REGEX.test(hourlyRate);
+        if (!v && !v1) {
             setErrMsg('Invalid entry');
             return;
         }
-        try {
-            form.append('image', image);
-            const response = await requests.post(IMGBB, form);
-            console.log(response?.data?.data?.display_url);
-            if (response.status === 200) {
-                setFile(response?.data?.data?.display_url);
-            }
-        } catch (error) {
-            console.log(error);
-        }
 
         try {
-            console.log(file);
             const response = await requests.post(
                 REGISTER_URL,
                 JSON.stringify({
                     dob: date,
                     education: education,
                     typeOfDegree: typeOfDegree,
-                    cardId: cardId,
-                    hourlyRate: 0,
-                    photo: file,
+                    cardId,
+                    hourlyRate,
+                    photo: nameImage,
                     headline: headline,
                     description: description,
                     address: address,
-                    isActive: true,
-                    accountId: context.userId,
+                    isActive: null,
+                    accountId: userId,
                 }),
                 {
                     headers: { 'Content-Type': 'application/json' },
                     withCredentials: true,
                 },
             );
-            context.setUserId('');
-            console.log(response?.data);
-            console.log(response.status);
+            setTutorId(response.data);
             if (response.status === 200) {
-                context.setActive(true);
-                navigate('/');
+                setUserId('');
+                setChooseSubject(true);
             }
         } catch (error) {
             if (!error?.response) {
@@ -125,6 +139,9 @@ function BecomeTutor2() {
                 <div className={cx('title')}>Register</div>
                 <div className={cx('currentForm')}>
                     <form className={cx('currentForm_content')} onSubmit={handleSubmit}>
+                        <p ref={errRef} className={errMsg ? 'errMsg' : 'offscreen'} aria-live="assertive">
+                            {errMsg}
+                        </p>
                         <div className={cx('form_row-birth')}>
                             <label htmlFor="dateOfBirth">Date of birth</label>
                             <input
@@ -140,14 +157,11 @@ function BecomeTutor2() {
                         </div>
 
                         <div className={cx('form_row')}>
-                            <p ref={errRef} className={errMsg ? 'errMsg' : 'offscreen'} aria-live="assertive">
-                                {errMsg}
-                            </p>
                             <div className={cx('form_row')}>
                                 <label htmlFor="txtCardId">
                                     Card Id
                                     <span className={cx({ valid: validCardID, hide: !validCardID })}>
-                                        <FontAwesomeIcon icon={faCheck}></FontAwesomeIcon>
+                                        <ValidIcon />
                                     </span>
                                     <span
                                         className={cx({
@@ -155,7 +169,7 @@ function BecomeTutor2() {
                                             invalid: !validCardID && cardId,
                                         })}
                                     >
-                                        <FontAwesomeIcon icon={faTimes}></FontAwesomeIcon>
+                                        <InvalidIcon />
                                     </span>
                                 </label>
                                 <input
@@ -182,34 +196,27 @@ function BecomeTutor2() {
                                         offscreen: !(cardFocus && cardId && !validCardID),
                                     })}
                                 >
-                                    <p>Card ID must be 11 number</p>
+                                    <span>Card ID must be 10 number</span>
                                 </p>
                             </div>
                         </div>
 
                         <div className={cx('form_row')}>
-                            <label htmlFor="txtDegree">Type of degree</label>
-                            <input
-                                type="text"
-                                id="txtDegree"
-                                name="txtDegree"
-                                className={cx('txtEducation')}
-                                placeholder="Graduate FPT University"
-                                value={typeOfDegree}
-                                onChange={(e) => {
-                                    const typeOfDegreeValue = e.target.value;
-                                    if (typeOfDegreeValue.startsWith(' ')) {
-                                        return;
-                                    }
-                                    setTypeOfDegree(e.target.value);
-                                }}
-                                onFocus={() => {
-                                    setTypeOfDegreeFocus(true);
-                                }}
-                                onBlur={() => {
-                                    setTypeOfDegreeFocus(false);
-                                }}
-                            ></input>
+                            <label htmlFor="typeOfDegree">Degree</label>
+                            <select
+                                id="typeOfDegree"
+                                name="typeOfDegree"
+                                onChange={(e) => setTypeOfDegree(e.target.value)}
+                            >
+                                {degrees.length > 0 &&
+                                    degrees.map((degree, index) => {
+                                        return (
+                                            <option key={index} value={degree}>
+                                                {degree}
+                                            </option>
+                                        );
+                                    })}
+                            </select>
                         </div>
 
                         <div className={cx('form_row')}>
@@ -239,7 +246,6 @@ function BecomeTutor2() {
 
                         <div className={cx('form_row')}>
                             <label htmlFor="headline">Head line</label>
-
                             <input
                                 type="text"
                                 id="headline"
@@ -290,6 +296,42 @@ function BecomeTutor2() {
                         </div>
 
                         <div className={cx('form_row')}>
+                            <label htmlFor="judgePrice">Judge price</label>
+                            <input
+                                type="number"
+                                id="judgePrice"
+                                name="judgePrice"
+                                className={cx('txtRePassword')}
+                                autoComplete="off"
+                                aria-describedby="uidnote"
+                                value={hourlyRate}
+                                onChange={(e) => {
+                                    console.log(e.target.value);
+                                    const hourlyRate = e.target.value;
+                                    if (hourlyRate.startsWith(' ')) {
+                                        return;
+                                    }
+                                    setHourlyRate(e.target.value);
+                                }}
+                                onFocus={() => {
+                                    setHourlyRateFocus(true);
+                                }}
+                                onBlur={() => {
+                                    setHourlyRateFocus(false);
+                                }}
+                            ></input>
+                            <p
+                                id="uidnote"
+                                className={cx({
+                                    instructions: hourlyRateFocus && hourlyRate && !validHourlyRate,
+                                    offscreen: !(hourlyRateFocus && hourlyRate && !validHourlyRate),
+                                })}
+                            >
+                                <span>Price must be positive not negative integers</span>
+                            </p>
+                        </div>
+
+                        <div className={cx('form_row')}>
                             <label htmlFor="txtAddress">Address</label>
                             <input
                                 type="text"
@@ -315,16 +357,32 @@ function BecomeTutor2() {
                         </div>
 
                         <div className={cx('form_row')}>
-                            <label for="myfile">Photo Certificate</label>
+                            <label htmlFor="myfile">Certificate</label>
                             <input
                                 type="file"
                                 id="myfile"
                                 name="myfile"
                                 onChange={(e) => setImage(e.target.files[0])}
                             />
+                            {!loadingImage ? (
+                                <Button
+                                    orange
+                                    onClick={handleChangeImage}
+                                    style={{ width: '60px', height: '20px', marginLeft: '4px', color: '#fff' }}
+                                >
+                                    Upload
+                                </Button>
+                            ) : (
+                                <p>loading....</p>
+                            )}
+                            {nameImage && (
+                                <Image src={nameImage} alt="avatar" className={cx('container__image')}></Image>
+                            )}
                         </div>
 
-                        <Button className={cx('submit')}>Submit</Button>
+                        {chooseSubject && <Subject />}
+
+                        <Button className={cx('submit', { hidden: nameImage === '' })}>Submit</Button>
                     </form>
                 </div>
             </div>

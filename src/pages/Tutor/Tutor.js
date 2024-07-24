@@ -1,40 +1,45 @@
 import classNames from 'classnames/bind';
-import { useMemo, useState, useEffect } from 'react';
-import { useLocation } from 'react-router-dom';
+import { useState, useEffect, useContext } from 'react';
+import useRequestsPrivate from '~/hooks/useRequestPrivate';
+import { Link } from 'react-router-dom';
 
-import Container from 'react-bootstrap/Container';
-import Row from 'react-bootstrap/Row';
-import Col from 'react-bootstrap/Col';
+import { Container, Row, Col } from 'react-bootstrap';
 
 import images from '~/assets/images';
 import Image from '~/components/Image';
 import { StarIcon } from '~/components/Icons';
 import Button from '~/components/Button';
-import useRequestsPrivate from '~/hook/useRequestPrivate';
+import Clip from '~/components/Clip';
+import { ModalContext } from '~/components/ModalProvider';
 
 import styles from './Tutor.module.scss';
-import Clip from '../Advertisement/components/Video/Clip';
+import Paging from '~/components/Paging';
 
 const cx = classNames.bind(styles);
 
-const PROFILETUTOR = 'Tutors/Id/';
-const FEEDBACKTUTOR = 'Feedbacks/';
+const PROFILETUTOR_URL = 'tutor/get_tutor-detail/';
+const FEEDBACKTUTOR_URL = 'feedback/get_feedbacks/';
+const ADVERTISEMENT_URL = 'tutor-ad/';
 
 function Tutor() {
     const requestPrivate = useRequestsPrivate();
+    const { tutorId } = useContext(ModalContext);
     const [userDetails, setUserDetails] = useState();
     const [userFeedbacks, setUserFeedbacks] = useState();
-    const [subjects, setSubjects] = useState('');
-    const { state } = useLocation();
+    const [curPage, setcurPage] = useState(1);
+    const [pagination, setPagination] = useState({ limit: 0 });
+    const [userAd, setUserAd] = useState([]);
 
-    console.log(`${FEEDBACKTUTOR}${state.key}`);
+    useEffect(() => {
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+    }, []);
 
     useEffect(() => {
         let isMounted = true;
         const controller = new AbortController();
         const getTutor = async () => {
             try {
-                const response = await requestPrivate.get(`${PROFILETUTOR}${state.key}`, {
+                const response = await requestPrivate.get(`${PROFILETUTOR_URL}${tutorId}`, {
                     signal: controller.signal,
                 });
                 console.log(response.data);
@@ -46,11 +51,25 @@ function Tutor() {
 
         const getFeedbackTutor = async () => {
             try {
-                const response = await requestPrivate.get(`${FEEDBACKTUTOR}${state.key}`, {
+                const response = await requestPrivate.get(`${FEEDBACKTUTOR_URL}${tutorId}`, {
                     signal: controller.signal,
                 });
-                console.log(response?.data);
-                isMounted && setUserFeedbacks(response.data);
+                isMounted && setUserFeedbacks(response.data.listResult);
+                setPagination({
+                    limit: response.data.limitPage,
+                });
+            } catch (error) {
+                console.log(error);
+            }
+        };
+
+        const getAds = async () => {
+            try {
+                const response = await requestPrivate.get(`${ADVERTISEMENT_URL}${tutorId}`, {
+                    signal: controller.signal,
+                });
+                setUserAd(response.data[0].video);
+                isMounted && setUserFeedbacks(response.data.listResult);
             } catch (error) {
                 console.log(error);
             }
@@ -58,12 +77,13 @@ function Tutor() {
 
         getTutor();
         getFeedbackTutor();
+        getAds();
 
         return () => {
             isMounted = false;
             controller.abort();
         };
-    }, [requestPrivate, state.key]);
+    }, [tutorId]);
 
     return (
         <div className={cx('wrapper')}>
@@ -92,20 +112,26 @@ function Tutor() {
                                 </div>
                             </div>
                             <div className={cx('container__tag-connect')}>
-                                <strong>Hourly Rate: ${userDetails?.hourlyRate}</strong>
-                                <Button orange>Contact {userDetails?.fullName}</Button>
-                                <span className={cx('container__tag-connect-respond')}>
-                                    Respond time: <strong>7 minutes minutes</strong>
-                                </span>
+                                <strong>Hourly Rate: {userDetails?.hourlyRate}VNĐ</strong>
+                                <Button orange>
+                                    <Link to={`/requestForm`} state={{ key: tutorId }}>
+                                        Request {userDetails?.fullName}
+                                    </Link>
+                                </Button>
+                        
                             </div>
                         </div>
                     </Col>
 
                     <Col lg="8" className={cx('container__about')}>
-                        <div className={cx('container__about-content')}>
-                            <p className={cx('container__about-content-title')}>About {userDetails?.fullName}</p>
-                            <Clip width={'760px'} height={'356px'} />
-                        </div>
+                        {userAd?.length > 0 ? (
+                            <div className={cx('container__about-content')}>
+                                <p className={cx('container__about-content-title')}>About {userDetails?.fullName}</p>
+                                <Clip width={'760px'} height={'356px'} clip={userAd} />
+                            </div>
+                        ) : (
+                            <></>
+                        )}
 
                         <div className={cx('container__about-content')}>
                             <p className={cx('container__about-content-title')}>About {userDetails?.fullName}</p>
@@ -135,31 +161,38 @@ function Tutor() {
                             </Row>
                         </div>
 
-                        <div className={cx('container__about-rating')}>
-                            <p className={cx('container__about-rating-title')}>Reviews</p>
-                            <div>
-                                <Row className={cx('container__about-rating-review')}>
-                                    <Col lg="4" className={cx('container__about-rating-review-title')}>
-                                        <span>Reviews</span>
-                                    </Col>
-                                    <Col lg="8" className={cx('container__about-rating-review-content')}>
-                                        {userFeedbacks &&
-                                            userFeedbacks.map((review, index) => {
-                                                return (
-                                                    <div className={cx('container__about-rating-review-item')}>
-                                                        <p>{review?.title}</p>
-                                                        <p>{review?.description}</p>
-                                                        <p className={cx('review-info')}>
-                                                            By
-                                                            <strong>{review?.fullName}</strong>
-                                                        </p>
-                                                    </div>
-                                                );
-                                            })}
-                                    </Col>
-                                </Row>
+                        {userFeedbacks?.length > 0 ? (
+                            <div className={cx('container__about-rating')}>
+                                <p className={cx('container__about-rating-title')}>Reviews</p>
+                                <div>
+                                    <Row className={cx('container__about-rating-review')}>
+                                        <Col lg="4" className={cx('container__about-rating-review-title')}>
+                                            <span>Reviews</span>
+                                        </Col>
+                                        <Col lg="8" className={cx('container__about-rating-review-content')}>
+                                            {userFeedbacks &&
+                                                userFeedbacks.map((review, index) => {
+                                                    return (
+                                                        <div className={cx('container__about-rating-review-item')}>
+                                                            <p>{review?.title}</p>
+                                                            <p>{review?.description}</p>
+                                                            <p className={cx('review-info')}>
+                                                                By
+                                                                <strong>{review?.fullName}</strong>
+                                                            </p>
+                                                        </div>
+                                                    );
+                                                })}
+                                        </Col>
+                                        {pagination.limit > 1 && (
+                                            <Paging pagination={pagination} curPage={curPage} setcurPage={setcurPage} />
+                                        )}
+                                    </Row>
+                                </div>
                             </div>
-                        </div>
+                        ) : (
+                            <></>
+                        )}
                     </Col>
                 </Row>
             </Container>

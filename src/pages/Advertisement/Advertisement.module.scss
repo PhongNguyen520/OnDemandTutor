@@ -2,6 +2,7 @@
     margin-top: var(--default-layout-height);
 }
 .container__main {
+    min-height: 100vh;
 }
 
 .container__sidebar {
@@ -41,6 +42,9 @@
 
 .container__sidebar-suggested {
     border-top: 1px solid var(--line-border);
+    max-height: 2232px;
+    overflow-y: scroll;
+    overflow-x: none;
     p {
         font-size: 1.4rem;
         font-weight: 700;

@@ -42,19 +42,24 @@
     }
 }
 
-.sidebar__items-grade, .sidebar__items-gender {
-    font-size: 1.6rem;
-        font-weight: 700;
-        margin: auto;
-        margin-top: 10px;
-        select{
-            border: 1px solid var(--line-border);
-        }
+.sider__items-grade-gender {
+    display: flex;
+    justify-content: space-between;
 }
 
-.sider__items-grade-gender{
-        display: flex;
+.sidebar__items-grade,
+.sidebar__items-gender {
+    font-size: 1.6rem;
+    font-weight: 700;
+    margin: 10px 0 0;
+    select {
+        border: 1px solid var(--line-border);
+    }
 
+    label {
+        font-weight: bold;
+        margin-right: 6px;
+    }
 }
 
 .sidebar__items-hours-rangeInput {
@@ -126,24 +131,6 @@
     }
 }
 
-// .sidebar__items-age {
-//     display: flex;
-//     flex-direction: column;
-
-//     span {
-//         span {
-//             margin-left: 10px;
-//             font-weight: 300;
-//             color: var(--light-gray);
-//         }
-//     }
-// }
-
-//result
-
-.result {
-}
-
 .result__total {
     display: flex;
     align-items: center;
@@ -154,6 +141,10 @@
     margin-top: 20px;
     p {
         font-size: 2.2rem;
+    }
+
+    p strong {
+        margin-right: 4px;
     }
 }
 
@@ -248,6 +239,10 @@
     display: flex;
     justify-content: space-between;
     font-size: 1.6rem;
+}
+
+.result__profile-generality-valuate-ic-star {
+    margin-right: 10px;
 }
 
 .result__profile-generality-price,

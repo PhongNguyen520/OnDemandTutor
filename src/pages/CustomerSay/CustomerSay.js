@@ -91,10 +91,10 @@ function CustomerSay() {
                                             <strong>{comment.author}</strong> reviews{' '}
                                             <Link
                                                 to={`/account/tutor/${comment.tutor}`}
-                                                state={{ key: `T000${index}` }}
+                                                state={{ key: `90234e7f-22a8-45e8-910e-d84e4d101144` }}
                                             >
                                                 {comment.tutor}
-                                            </Link>{' '}
+                                            </Link>
                                             from Ha Noi, Viet Nam
                                         </p>
                                     </div>

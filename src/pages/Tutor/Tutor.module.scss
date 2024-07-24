@@ -77,7 +77,6 @@
     align-items: center;
     padding: 0 20px;
     margin-top: 10px;
-
     > strong:first-of-type {
         font-size: 1.6rem;
         padding: 10px 0;
@@ -88,13 +87,16 @@
 
     button {
         height: 34px;
-        width: 160px;
-        color: var(--white);
+        padding: 0 10px;
         font-size: 1.6rem;
-
+        margin-bottom: 20px;
         &:hover {
             background-color: var(--hover);
         }
+    }
+
+    button span a {
+        color: var(--white);
     }
 }
 

@@ -1,8 +1,6 @@
 import classNames from 'classnames/bind';
 import { Link } from 'react-router-dom';
-import { useContext, useEffect, useState } from 'react';
-import { doc, getDoc } from 'firebase/firestore';
-import { auth as Auth, db } from '~/firebase/firebase';
+import { useContext } from 'react';
 
 import 'bootstrap/dist/css/bootstrap.min.css';
 import Container from 'react-bootstrap/Container';
@@ -15,34 +13,18 @@ import Sidebar from './components/Sidebar';
 import images from '~/assets/images';
 import Button from '~/components/Button';
 import User from './components/LogIn/User';
-import Notification from './components/LogIn/Notification';
+import Notification from '~/components/Notification';
 import { ModalContext } from '~/components/ModalProvider';
-// import { faBell } from '@fortawesome/free-solid-svg-icons';
-// import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { NotificationIcon } from '~/components/Icons';
 
 import styles from './Header.module.scss';
+import NavMessage from '~/components/NavMessage';
 
 const cx = classNames.bind(styles);
 
 function Header() {
-    const [userDetails, setUserDetail] = useState(null);
-    const context = useContext(ModalContext);
-    const user = context.user;
-
-    useEffect(() => {
-        Auth.onAuthStateChanged(async (user) => {
-            if (user) {
-                const docRef = doc(db, 'Users', user.uid);
-                const docSnap = await getDoc(docRef);
-                if (docSnap.exists()) {
-                    setUserDetail(docSnap.data());
-                } else {
-                    console.log('User is not logged in');
-                }
-            }
-        });
-    });
+    const { isRead, user, avatar, handleActive, handleActiveSignUp } = useContext(ModalContext);
+    const alreadyLogin = user;
 
     return (
         <div className={cx('wrapper')}>
@@ -58,21 +40,26 @@ function Header() {
                         <Sidebar />
                     </Col>
 
-                    {user ? (
+                    {alreadyLogin ? (
                         <Col lg="2" className={cx('container__login-signup')}>
-                            <Notification>
-                                <a href='/notifications'>
-                                <div className={cx('container__login-signup-noti')}>
-                                    <NotificationIcon />
-                                    <span className={cx('container__login-signup-number')}>2</span>
-                                </div>
-                                </a>
-                            </Notification>
+                            <Link to="/notifications">
+                                <Notification>
+                                    <div className={cx('container__login-signup-noti')}>
+                                        <NotificationIcon />
+                                        <span className={cx('container__login-signup-number')}>
+                                            {isRead ? isRead.length : 0}
+                                        </span>
+                                    </div>
+                                </Notification>
+                            </Link>
+
+                            <NavMessage />
+
                             <User>
                                 <div className={cx('container__login-user')}>
                                     <Image
-                                        src={userDetails?.photo}
-                                        alt="NTP"
+                                        src={avatar.avatar}
+                                        alt={avatar.fullName}
                                         className={cx('container__login-user-img')}
                                     ></Image>
                                 </div>
@@ -80,13 +67,10 @@ function Header() {
                         </Col>
                     ) : (
                         <Col lg="2" className={cx('container__login-signup')}>
-                            <Button onClick={context.handleActive} className={cx('container__login-signup-login-btn')}>
+                            <Button onClick={handleActive} className={cx('container__login-signup-login-btn')}>
                                 LOG IN
                             </Button>
-                            <Button
-                                onClick={context.handleActiveSignUp}
-                                className={cx('container__login-signup-signup-btn')}
-                            >
+                            <Button onClick={handleActiveSignUp} className={cx('container__login-signup-signup-btn')}>
                                 SIGN UP
                             </Button>
                         </Col>
